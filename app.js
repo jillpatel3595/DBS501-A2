@@ -2,9 +2,8 @@ const express = require('express');
 const oracledb = require('oracledb');
 require('dotenv').config();
 
-
 const app = express();
-const port = 8000;
+const port = 3000;
 
 const dbConfig = {
   user: process.env.user,
@@ -63,6 +62,40 @@ app.post('/employee/hire', async (req, res) => {
     res.status(500).json({ error: 'Failed to hire employee.' });
   }
 });
+
+
+/// Sharmileen code starts
+
+app.get("/employee-menu", (req, res) => {
+  let sql = `SELECT * FROM HR_EMPLOYEES`;
+
+  conn
+    .execute(sql)
+    .then((result) => {
+      res.render("employee-menu", { employee: result.rows });
+    })
+    .catch((err) => {
+      console.error(err.message);
+    });
+});
+
+app.post("/update-employee", (req, res) => {
+  const { e_id, e_salary, e_phone, e_email } = req.body;
+
+  let sql = `BEGIN updateEmployee(:e_id, :e_salary, :e_phone, :e_email); END;`;
+
+  conn
+    .execute(sql, { e_id, e_salary, e_phone, e_email }, { autoCommit: true })
+    .then(() => {
+      console.log("Employee updated successfully");
+      res.send("Success");
+    })
+    .catch((err) => {
+      console.error(err.message);
+      res.status(500).send("Error updated employee");
+    });
+});
+
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
