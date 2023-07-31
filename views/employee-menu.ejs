@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Employee Menu</title>
+  </head>
+  <body>
+    <h1>Employee Menu</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Salary</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% employee.forEach(emp => { %>
+        <tr>
+          <form action="/update-employee" method="POST">
+            <td><%= emp.employee_id %></td>
+            <td><%= emp.FIRST_NAME %></td>
+            <td><%= emp.LAST_NAME %></td>
+            <td>
+              <input type="number" name="e_salary" value="<%= emp.SALARY %>" />
+            </td>
+            <td>
+              <input
+                type="text"
+                name="e_phone"
+                value="<%= emp.PHONE_NUMBER %>"
+              />
+            </td>
+            <td>
+              <input
+                type="email"
+                name="e_email"
+                value="<%= emp.EMAIL %>@email.com"
+              />
+            </td>
+            <td>
+              <input type="hidden" name="e_id" value="<%= emp.ID %>" />
+              <input type="submit" value="Update" />
+            </td>
+          </form>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </body>
+</html>

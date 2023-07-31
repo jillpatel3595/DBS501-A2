@@ -1,0 +1,128 @@
+<!--
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Employee Information</title>
+    <style>
+      table,
+      th,
+      td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 5px;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Employee Information</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Email</th>
+          <th>Phone Number</th>
+          <th>Hire Date</th>
+          <th>Salary</th>
+          <th>Commission</th>
+          <th>Job Title</th>
+          <th>Min Salary</th>
+          <th>Max Salary</th>
+          <th>Department</th>
+          <th>Address</th>
+          <th>Postal Code</th>
+          <th>City</th>
+          <th>State/Province</th>
+          <th>Country</th>
+          <th>Region</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% employee.forEach(function(emp) { %>
+        <tr>
+          <td><%- emp.employee_id %></td>
+          <td><%- emp.first_name %></td>
+          <td><%- emp.last_name %></td>
+          <td><%- emp.email %></td>
+          <td><%- emp.phone_number %></td>
+          <td><%- emp.hire_date %></td>
+          <td><%- emp.salary %></td>
+          <td><%- emp.commission_pct %></td>
+          <td><%- emp.job_title %></td>
+          <td><%- emp.min_salary %></td>
+          <td><%- emp.max_salary %></td>
+          <td><%- emp.department_name %></td>
+          <td><%- emp.street_address %></td>
+          <td><%- emp.postal_code %></td>
+          <td><%- emp.city %></td>
+          <td><%- emp.state_province %></td>
+          <td><%- emp.country_name %></td>
+          <td><%- emp.region_name %></td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </body>
+</html>
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Employee Information</title>
+  </head>
+  <body>
+    <h1>Employee Information</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>Employee ID</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Email</th>
+          <th>Phone Number</th>
+          <th>Hire Date</th>
+          <th>Salary</th>
+          <th>Commission PCT</th>
+          <th>Job Title</th>
+          <th>Min Salary</th>
+          <th>Max Salary</th>
+          <th>Department Name</th>
+          <th>Street Address</th>
+          <th>Postal Code</th>
+          <th>City</th>
+          <th>State Province</th>
+          <th>Country Name</th>
+          <th>Region Name</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% employee.forEach(emp => { %>
+        <tr>
+          <form action="/update-employee" method="POST">
+            <td><%= emp.employee_id %></td>
+            <td><%= emp.first_name %></td>
+            <td><%= emp.last_name %></td>
+            <td><%= emp.email %></td>
+            <td><%= emp.phone_number %></td>
+            <td><%= emp.hire_date %></td>
+            <td><%= emp.salary %></td>
+            <td><%= emp.commission_pct %></td>
+            <td><%= emp.job_title %></td>
+            <td><%= emp.min_salary %></td>
+            <td><%= emp.max_salary %></td>
+            <td><%= emp.department_name %></td>
+            <td><%= emp.street_address %></td>
+            <td><%= emp.postal_code %></td>
+            <td><%= emp.city %></td>
+            <td><%= emp.state_province %></td>
+            <td><%= emp.country_name %></td>
+            <td><%= emp.region_name %></td>
+          </form>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </body>
+</html>
