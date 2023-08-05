@@ -3,6 +3,7 @@ import Navbar from "../navbar/Navbar";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Newhire from "../newhire/Newhire";
 import Employees from './../employees/Employees';
+import Jobs from "../jobs/Jobs";
 
 
 const AppContainer = () => {
@@ -13,6 +14,7 @@ const AppContainer = () => {
                 <Routes>
                     <Route path="new-hire" element={<Newhire />} />
                     <Route path="employees" element={<Employees />} />
+                    <Route path="jobs" element={<Jobs />} />
                     <Route path=""  element={<Employees />} />
                 </Routes>
             </BrowserRouter>

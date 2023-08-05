@@ -11,7 +11,7 @@ import MenuItem from '@mui/material/MenuItem';
 import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 
-const pages = ['employees', 'new-hire'];
+const pages = ['employees', 'new-hire', 'jobs'];
 
 function Navbar() {
   const [anchorElNav, setAnchorElNav] = useState(null);

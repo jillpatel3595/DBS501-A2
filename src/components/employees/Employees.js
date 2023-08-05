@@ -1,85 +1,88 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, Stack, TextField } from "@mui/material";
+import { Button, CircularProgress, Stack, TextField } from "@mui/material";
 import Dropdown from "../../shared/Dropdown";
+import fetchEmployeeData from "../../services/getAllEmployees";
+import updateEmployee from '../../services/updateEmployee';
 
 function Employees() {
+  const [id, setId] = useState(null);
   const [employee, setEmployee] = useState({});
   const [firstName, setFirstName] = useState(null);
   const [lastName, setLastName] = useState(null);
   const [email, setEmail] = useState(null);
-  const [hireDate, setHireDate] = useState(new Date().toJSON().slice(0, 10));
-  const [job, setJob] = useState(null);
-  const [manager, setManager] = useState(null);
-  const [department, setDepartment] = useState(null);
+  const [phone, setPhone] = useState(new Date().toJSON().slice(0, 10));
+  const [salary, setSalary] = useState(null);
+  const [employees, setEmployees] = useState(null);
+  const [data, setData] = useState([])
+  const [error, setError] = useState(null)
+
+  const transformData = (old) => {
+    return old?.map(employee => {
+      const id = employee.EMPLOYEE_ID
+      const firstName = employee.FIRST_NAME;
+      const lastName = employee.LAST_NAME;
+      const email = employee.EMAIL;
+      const phone = employee.PHONE_NUMBER;
+      const salary = employee.SALARY;
+  
+      return {
+        label: `${firstName} ${lastName}, ${email}, ${phone}, ${salary}`,
+        firstName,
+        lastName,
+        email,
+        phone,
+        salary,
+        id
+      };
+    });
+  };
+
+  const getEmployeeData = async () => {
+    const employeeData = await fetchEmployeeData().catch((reason) => {setError(reason.message)});
+    setEmployees(employeeData)
+    const conversion = transformData(employeeData)
+    setData(conversion)
+  };
+
+  useEffect(()=> {
+    console.log(error)
+    if (!employees && !error){
+      getEmployeeData();
+    }
+  }, [employees, data, error])
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("firstName", firstName);
-    console.log("lastName", lastName);
-    console.log("email", email);
-    console.log("hireDate", hireDate);
-    console.log("job", job?.label);
-    console.log("manager", manager?.label);
-    console.log("department", department?.label);
+    updateEmployee({e_id: id, e_email: email, e_phone: phone, e_salary: salary})
   };
 
   const handleCancel = () => {
     setEmployee({});
   };
 
-  const data1 = [
-    { label: "IT Admin" },
-    { label: "IT Manager" },
-    { label: "Social Media Manager" },
-    { label: "CEO" },
-    { label: "HR" },
-  ];
-
-  const data2 = [
-    { label: "Jim Brown" },
-    { label: "John Smith" },
-    { label: "Mark Bok" },
-    { label: "John Snow" },
-  ];
-
-  const data3 = [
-    { label: "Sales" },
-    { label: "Marketing" },
-    { label: "System Integration" },
-    { label: "Software Deployment" },
-  ];
-
-  const data4 = [
-    { label: "Jim Hooks", firstName: "Jim", lastName: "Hooks", email: "jh@email.com", hireDate: "2023-07-20", job: "IT Admin", manager: "Jim Brown", department: "Sales" },
-    { label: "Joe Roe", firstName: "Joe", lastName: "Roe", email: "jr@email.com", hireDate: "2023-07-20", job: "IT Admin", manager: "Jim Brown", department: "Sales" },
-    { label: "Tim Rooks", firstName: "Tim", lastName: "Rooks", email: "tr@email.com", hireDate: "2023-07-20", job: "HR", manager: "Jim Brown", department: "Marketing" },
-    { label: "John Doe", firstName: "John", lastName: "Doe", email: "jd@email.com", hireDate: "2023-07-20", job: "CEO", manager: "Jim Brown", department: "Software Deployment" },
-  ];
-
   useEffect(() => {
     if (employee && employee.label) {
+      setId(employee.id);
       setFirstName(employee.firstName);
       setLastName(employee.lastName);
       setEmail(employee.email);
-      setHireDate(employee.hireDate);
-      setJob({ label: employee.job });
-      setManager({ label: employee.manager });
-      setDepartment({ label: employee.department });
+      setPhone(employee.phone);
+      setSalary(employee.salary);
     } else {
+      setId(null)
       setFirstName(null);
       setLastName(null);
       setEmail(null);
-      setHireDate(new Date().toJSON().slice(0, 10));
-      setJob(null);
-      setManager(null);
-      setDepartment(null);
+      setPhone(null);
+      setSalary(null);
     }
   }, [employee]);
 
   return (
     <>
       <h2>Employees Form</h2>
-      <Dropdown data={data4} label={"Employee"} fullWidth selection={employee} setSelection={setEmployee} />
+      {data ? <>
+      <Dropdown data={data} label={"Employee"} fullWidth selection={employee} setSelection={setEmployee} />
       {employee && employee.label ? (
         <form onSubmit={handleSubmit}>
           <Stack spacing={2} direction="row" sx={{ marginBottom: 4 }}>
@@ -91,7 +94,7 @@ function Employees() {
               onChange={(e) => setFirstName(e.target.value)}
               value={firstName || ""}
               fullWidth
-              required
+              disabled
             />
             <TextField
               type="text"
@@ -101,7 +104,7 @@ function Employees() {
               onChange={(e) => setLastName(e.target.value)}
               value={lastName || ""}
               fullWidth
-              required
+              disabled
             />
           </Stack>
           <TextField
@@ -116,20 +119,27 @@ function Employees() {
             sx={{ mb: 4 }}
           />
           <TextField
-            type="date"
-            variant="outlined"
-            color="secondary"
-            label="Hire Date"
-            onChange={(e) => setHireDate(e.target.value)}
-            value={hireDate}
-            fullWidth={true}
-            required={true}
-            sx={{ mb: 4 }}
-          />
-          <Dropdown data={data1} label={"Jobs"} fullWidth required selection={job} setSelection={setJob} />
-          <Dropdown data={data2} label={"Manager"} fullWidth selection={manager} setSelection={setManager} />
-          <Dropdown data={data3} label={"Department"} fullWidth selection={department} setSelection={setDepartment} />
-          <Stack spacing={2} sx={{ marginBottom: 4, justifyContent: "center" }}>
+              type="text"
+              variant="outlined"
+              color="secondary"
+              label="Phone"
+              onChange={(e) => setPhone(e.target.value)}
+              value={phone || ""}
+              fullWidth
+              required
+            />
+          <TextField
+              type="text"
+              variant="outlined"
+              color="secondary"
+              label="Salary"
+              onChange={(e) => setSalary(e.target.value)}
+              value={salary || ""}
+              fullWidth
+              required
+              sx={{marginTop: "32px"}}
+            />
+          <Stack spacing={2} sx={{ marginBottom: 4, justifyContent: "center", paddingTop: "24px" }}>
             <Button variant="contained" color="primary" type="submit">
               Update
             </Button>
@@ -138,9 +148,9 @@ function Employees() {
             </Button>
           </Stack>
         </form>
-      ) : (
-        <></>
-      )}
+      ) : (<></>)
+      }
+      </>: !error ? <CircularProgress /> : <Dropdown data={[]} label={"Employee"} fullWidth selection={employee} setSelection={setEmployee} />}
     </>
   );
 }
