@@ -39,12 +39,7 @@ app.post('/employee/hire', async (req, res) => {
   try {
     const connection = await oracledb.getConnection();
     const result = await connection.execute(
-      // `BEGIN
-      //    INSERT INTO hr_employees (EMPLOYEE_ID, FIRST_NAME, LAST_NAME, EMAIL, PHONE_NUMBER, HIRE_DATE, JOB_ID, SALARY, MANAGER_ID, DEPARTMENT_ID)
-      //    VALUES (EMPLOYEES_SEQ.NEXTVAL, '${p_first_name}', '${p_last_name}', '${p_email}', '${p_phone}', TO_DATE('${p_hire_date}', 'YY-MM-DD'), '${p_job_id}', ${p_salary}, ${p_manager_id}, ${p_department_id});
-      //    COMMIT;
-      //  END;`,
-
+    
       `BEGIN
          Employee_hire_sp('${p_first_name}', '${p_last_name}', '${p_email}', ${p_salary}, TO_DATE('${p_hire_date}', 'YY-MM-DD'), '${p_phone}', '${p_job_id}', ${p_manager_id}, ${p_department_id});
        END;`,
@@ -61,42 +56,78 @@ app.post('/employee/hire', async (req, res) => {
     console.error('Error inserting employee:', err);
     res.status(500).json({ error: 'Failed to hire employee.' });
   }
+
+});
+
+app.get('/job/title', async (req, res) => {
+  try {
+    const connection = await oracledb.getConnection();
+    const result = await connection.execute(
+      `SELECT * FROM hr_jobs`
+    );
+
+    connection.release();
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'No jobs found.' });
+    } else {
+      res.status(200).json(result.rows);
+    }
+  } catch (err) {
+    console.error('Error fetching job titles:', err);
+    res.status(500).json({ error: 'Failed to fetch job titles.' });
+  }
 });
 
 
-/// Sharmileen code starts
+app.get('/department_id', async (req, res) => {
+  try {
+    const connection = await oracledb.getConnection();
+    const result = await connection.execute(
+      `SELECT * FROM hr_departments`
+    );
 
-app.get("/employee-menu", (req, res) => {
-  let sql = `SELECT * FROM HR_EMPLOYEES`;
+    connection.release();
 
-  conn
-    .execute(sql)
-    .then((result) => {
-      res.render("employee-menu", { employee: result.rows });
-    })
-    .catch((err) => {
-      console.error(err.message);
-    });
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'No departments found.' });
+    } else {
+      res.status(200).json(result.rows);
+    }
+  } catch (err) {
+    console.error('Error fetching departments:', err);
+    res.status(500).json({ error: 'Failed to fetch departments.' });
+  }
 });
 
-app.post("/update-employee", (req, res) => {
-  const { e_id, e_salary, e_phone, e_email } = req.body;
 
-  let sql = `BEGIN updateEmployee(:e_id, :e_salary, :e_phone, :e_email); END;`;
+app.get('/manager', async (req, res) => {
+  try {
+    const connection = await oracledb.getConnection();
+    const result = await connection.execute(
+      `SELECT * FROM hr_employees WHERE employee_id IN (SELECT manager_id FROM hr_employees)`
+    );
 
-  conn
-    .execute(sql, { e_id, e_salary, e_phone, e_email }, { autoCommit: true })
-    .then(() => {
-      console.log("Employee updated successfully");
-      res.send("Success");
-    })
-    .catch((err) => {
-      console.error(err.message);
-      res.status(500).send("Error updated employee");
-    });
+    connection.release();
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'No managers found.' });
+    } else {
+      res.status(200).json(result.rows);
+    }
+  } catch (err) {
+    console.error('Error fetching manager employees:', err);
+    res.status(500).json({ error: 'Failed to fetch manager employees.' });
+  }
 });
+
 
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+
+
+
+
