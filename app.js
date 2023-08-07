@@ -136,7 +136,7 @@ app.get("/employeeAllInfo", async (req, res) => {
     .execute(sql)
     .then((result) => {
       //res.render("employee-all", { employee: result.rows });
-      res.json({ employees: result.row });
+      res.json({ employees: result.rows });
     })
     .catch((err) => {
       console.error(err.message);
