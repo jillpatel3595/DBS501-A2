@@ -14,6 +14,7 @@ const dbConfig = {
 async function DBconnection() {
   try {
     await oracledb.createPool(dbConfig);
+    //await oracledb.getPool("default");
     console.log("Connected to Oracle DB");
   } catch (err) {
     console.error("Error connecting to Oracle DB:", err);
@@ -21,40 +22,9 @@ async function DBconnection() {
 }
 DBconnection();
 app.use(express.json());
+/*
 
-app.post("/employee/hire", async (req, res) => {
-  const {
-    p_first_name,
-    p_last_name,
-    p_email,
-    p_salary,
-    p_hire_date,
-    p_phone,
-    p_job_id,
-    p_manager_id,
-    p_department_id,
-  } = req.body;
-
-  try {
-    const connection = await oracledb.getConnection();
-    const result = await connection.execute(
-      `BEGIN
-         Employee_hire_sp('${p_first_name}', '${p_last_name}', '${p_email}', ${p_salary}, TO_DATE('${p_hire_date}', 'YY-MM-DD'), '${p_phone}', '${p_job_id}', ${p_manager_id}, ${p_department_id});
-       END;`,
-      {},
-      {
-        autoCommit: true,
-      }
-    );
-
-    connection.release();
-
-    res.status(200).json({ message: "Employee hired successfully." });
-  } catch (err) {
-    console.error("Error inserting employee:", err);
-    res.status(500).json({ error: "Failed to hire employee." });
-  }
-});
+*/
 
 app.get("/job/title", async (req, res) => {
   try {
@@ -112,8 +82,59 @@ app.get("/manager", async (req, res) => {
   }
 });
 
-//Sharmilenn's Code
 
+//Sharmilenn's Code
+app.post("/newEmployee", async (req, res) => {
+    const {
+      p_first_name,
+      p_last_name,
+      p_email,
+      p_hire_date,
+      p_salary,
+      p_job_id,
+      p_manager_id,
+      p_department_id,
+    } = req.body;
+  
+    let connection;
+    try {
+      connection = await oracledb.getConnection();
+  
+      const result = await connection.execute(
+        `BEGIN
+                 Employee_hire_sp3('${p_first_name}', '${p_last_name}', '${p_email}', TO_DATE('${p_hire_date}', 'YY-MM-DD'), ${p_salary}, '${p_job_id}', ${p_manager_id}, ${p_department_id});
+               END;`,
+        {},
+        {
+          autoCommit: true,
+        }
+      );
+  
+      res.status(200).json({ message: "Employee hired successfully." });
+    } catch (err) {
+      console.error("Error inserting employee:", err);
+      if (err.errorNum && err.errorNum === 20100) {
+        return res.status(404).json({
+          error:
+            "Failed to hire an employee due to an invalid parameter. Invalid salary",
+        });
+      } else if (err.errorNum && err.errorNum === 1841) {
+        return res.status(404).json({
+          error:
+            "Failed to hire an employee invalid year or no hire date value entered.",
+        });
+      } else if (err.errorNum && err.errorNum === 1) {
+        return res.status(404).json({
+          error: "Failed to hire an employee. Unique constraint.",
+        });
+      }
+      res.status(500).json({ error: "Failed to hire employee." });
+    } finally {
+      if (connection) {
+        connection.release();
+      }
+    }
+  });
 app.get("/employeeAllInfo", async (req, res) => {
   let sql = `
           SELECT 
@@ -136,7 +157,7 @@ app.get("/employeeAllInfo", async (req, res) => {
     .execute(sql)
     .then((result) => {
       //res.render("employee-all", { employee: result.rows });
-      res.json({ employees: result.rows });
+      res.json({ employees: result.row });
     })
     .catch((err) => {
       console.error(err.message);
