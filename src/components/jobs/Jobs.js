@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Button, CircularProgress, Stack, TextField } from "@mui/material";
 import Dropdown from "../../shared/Dropdown";
-import updateJob from '../../services/updateEmployee';
+import updateJob from '../../services/updateJob';
 import getAllJobsData from './../../services/getAllJobsData';
 import IconButton from '@mui/material/IconButton';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import DisabledByDefaultIcon from '@mui/icons-material/DisabledByDefault';
+import addNewJob from './../../services/addNewJob';
 
 function Jobs() {
   const [id, setId] = useState(null);
   const [job, setJob] = useState({});
   const [description, setDescription] = useState(null);
-  const [title, setTitle] = useState(null);
   const [minSalary, setMinSalary] = useState(null);
   const [maxSalary, setMaxSalary] = useState(null);
   const [jobs, setJobs] = useState(null);
@@ -20,17 +20,15 @@ function Jobs() {
   const [newJob, setNewJob] = useState(false)
 
   const transformData = (old) => {
-    return old?.map(employee => {
-      const id = employee.id
-      const description = employee.description;
-      const title = employee.title;
-      const minSalary = employee.minSalary;
-      const maxSalary = employee.maxSalary;
+    return old?.map(jobs => {
+      const id = jobs[0]
+      const description = jobs[1];
+      const minSalary = jobs[2];
+      const maxSalary = jobs[3];
   
       return {
-        label: `${title}, ${description}, ${minSalary}, ${maxSalary}`,
+        label: `${description}`,
         description,
-        title,
         minSalary,
         maxSalary,
         id
@@ -40,9 +38,11 @@ function Jobs() {
 
   const getJobsData = async () => {
     const jobsData = await getAllJobsData().catch((reason) => {setError(reason.message)});
-    setJobs(jobsData)
-    const conversion = transformData(jobsData)
-    setData(conversion)
+    if (jobsData){
+      setJobs(jobsData.jobs)
+      const conversion = transformData(jobsData.jobs)
+      setData(conversion)
+    }
   };
 
   useEffect(()=> {
@@ -54,7 +54,26 @@ function Jobs() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    updateJob({})
+    if (newJob){
+      addNewJob(
+        {JOB_ID: id, JOB_TITLE: description, MIN_SALARY: minSalary, MAX_SALARY: maxSalary}
+      ).then((data)=>{
+        getJobsData();
+      }).catch((error)=>{
+        getJobsData();
+        
+      })
+    }
+    else{
+      updateJob(
+        {JOB_ID: id, JOB_TITLE: description, MIN_SALARY: minSalary, MAX_SALARY: maxSalary}
+      ).then((data)=>{
+        getJobsData();
+      }).catch((error)=>{
+        getJobsData();
+        
+      })
+    }
   };
 
   const handleCancel = () => {
@@ -62,21 +81,21 @@ function Jobs() {
   };
 
   useEffect(() => {
-    if (job && job.label) {
-      setId(job.id);
-      setDescription(job.description);
-      setTitle(job.title);
-      setMinSalary(job.minSalary);
-      setMaxSalary(job.maxSalary);
-    } else {
-      setSelectionNull();
+    if (!newJob){
+      if (job && job.label) {
+        setId(job.id);
+        setDescription(job.description);
+        setMinSalary(job.minSalary);
+        setMaxSalary(job.maxSalary);
+      } else {
+        setSelectionNull();
+      }
     }
-  }, [job]);
+  }, [job, newJob]);
 
   const setSelectionNull = () => {
     setId(null)
     setDescription(null);
-    setTitle(null);
     setMinSalary(null);
     setMaxSalary(null);
     setJob({})
@@ -88,6 +107,8 @@ function Jobs() {
     }
     setNewJob(!newJob);
   }
+
+  useEffect(()=>{},[jobs, data])
 
   return (
     <>
@@ -104,28 +125,17 @@ function Jobs() {
       {!newJob && <Dropdown data={data} label={"Jobs"} fullWidth selection={job} setSelection={setJob} />}
       {(job && job.label) || newJob ? (
         <form onSubmit={handleSubmit}>
-          <Stack spacing={2} direction="row" sx={{ marginBottom: 4 }}>
-            <TextField
-              type="text"
-              variant="outlined"
-              color="secondary"
-              label="Job ID"
-              onChange={(e) => setId(e.target.value)}
-              value={id || ""}
-              fullWidth
-              required
-            />
-            <TextField
-              type="text"
-              variant="outlined"
-              color="secondary"
-              label="Title"
-              onChange={(e) => setTitle(e.target.value)}
-              value={title || ""}
-              fullWidth
-              required
-            />
-          </Stack>
+          <TextField
+            type="text"
+            variant="outlined"
+            color="secondary"
+            label="Job ID"
+            onChange={(e) => setId(e.target.value)}
+            value={id || ""}
+            fullWidth
+            required
+            sx={{ mb: 4 }}
+          />
           <TextField
               type="text"
               variant="outlined"

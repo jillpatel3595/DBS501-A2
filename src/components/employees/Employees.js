@@ -18,15 +18,15 @@ function Employees() {
 
   const transformData = (old) => {
     return old?.map(employee => {
-      const id = employee.EMPLOYEE_ID
-      const firstName = employee.FIRST_NAME;
-      const lastName = employee.LAST_NAME;
-      const email = employee.EMAIL;
-      const phone = employee.PHONE_NUMBER;
-      const salary = employee.SALARY;
+      const id = employee[0]
+      const firstName = employee[1];
+      const lastName = employee[2];
+      const email = employee[3];
+      const phone = employee[4];
+      const salary = employee[6];
   
       return {
-        label: `${firstName} ${lastName}, ${email}, ${phone}, ${salary}`,
+        label: `${firstName} ${lastName}`,
         firstName,
         lastName,
         email,
@@ -39,9 +39,11 @@ function Employees() {
 
   const getEmployeeData = async () => {
     const employeeData = await fetchEmployeeData().catch((reason) => {setError(reason.message)});
-    setEmployees(employeeData)
-    const conversion = transformData(employeeData)
-    setData(conversion)
+    if (employeeData){
+      setEmployees(employeeData.employees)
+      const conversion = transformData(employeeData.employees)
+      setData(conversion)
+    }
   };
 
   useEffect(()=> {
@@ -53,7 +55,14 @@ function Employees() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    updateEmployee({e_id: id, e_email: email, e_phone: phone, e_salary: salary})
+    updateEmployee(
+      {EMPLOYEE_ID: id, EMAIL: email, PHONE_NUMBER: phone, SALARY: salary}
+    ).then((data) => {
+      getEmployeeData();
+      handleCancel();
+    }).catch((error) => {
+      setError(error.message)
+    })
   };
 
   const handleCancel = () => {
