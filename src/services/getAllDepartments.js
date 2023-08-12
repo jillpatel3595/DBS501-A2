@@ -1,0 +1,14 @@
+import axios from 'axios';
+
+const getAllDepartments = async () => {
+    try{
+        const apiUrl = 'http://localhost:3000/department_id';
+        const response = await axios.get(apiUrl, {timeout: 100000});
+        return response.data;
+    }
+    catch(error){
+        return []
+    }
+}
+
+export default getAllDepartments;
