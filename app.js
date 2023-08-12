@@ -1,14 +1,21 @@
 const express = require("express");
 const oracledb = require("oracledb");
+var cors = require('cors');
 require("dotenv").config();
 
 const app = express();
 const port = 3000;
+app.use(cors());
 
 const dbConfig = {
   user: process.env.user,
   password: process.env.password,
   connectString: process.env.connectString,
+  // poolMin: 2, 
+  // poolMax: 10, 
+  // poolIncrement: 1, 
+  // poolTimeout: 60, 
+  queueTimeout: 120000
 };
 
 async function DBconnection() {
@@ -31,7 +38,8 @@ app.get("/job/title", async (req, res) => {
     const connection = await oracledb.getConnection();
     const result = await connection.execute(`SELECT * FROM hr_jobs`);
 
-    connection.release();
+    // connection.release();
+    connection.close();
 
     if (result.rows.length === 0) {
       res.status(404).json({ error: "No jobs found." });
@@ -49,7 +57,8 @@ app.get("/department_id", async (req, res) => {
     const connection = await oracledb.getConnection();
     const result = await connection.execute(`SELECT * FROM hr_departments`);
 
-    connection.release();
+    // connection.release();
+    connection.close();
 
     if (result.rows.length === 0) {
       res.status(404).json({ error: "No departments found." });
@@ -63,14 +72,16 @@ app.get("/department_id", async (req, res) => {
 });
 
 app.get("/manager", async (req, res) => {
+  let connection;
   try {
-    const connection = await oracledb.getConnection();
+    connection = await oracledb.getConnection();
     const result = await connection.execute(
       `SELECT * FROM hr_employees WHERE employee_id IN (SELECT manager_id FROM hr_employees)`
     );
-
-    connection.release();
-
+ 
+    // connection.release();
+    connection.close();
+ 
     if (result.rows.length === 0) {
       res.status(404).json({ error: "No managers found." });
     } else {
@@ -79,6 +90,10 @@ app.get("/manager", async (req, res) => {
   } catch (err) {
     console.error("Error fetching manager employees:", err);
     res.status(500).json({ error: "Failed to fetch manager employees." });
+  } finally {
+    // if (connection) {
+    //   connection.release();
+    // }
   }
 });
 
@@ -109,7 +124,7 @@ app.post("/newEmployee", async (req, res) => {
           autoCommit: true,
         }
       );
-  
+      connection.close();
       res.status(200).json({ message: "Employee hired successfully." });
     } catch (err) {
       console.error("Error inserting employee:", err);
@@ -130,101 +145,135 @@ app.post("/newEmployee", async (req, res) => {
       }
       res.status(500).json({ error: "Failed to hire employee." });
     } finally {
-      if (connection) {
-        connection.release();
-      }
+      // if (connection) {
+      //   connection.release();
+      // }
     }
   });
-app.get("/employeeAllInfo", async (req, res) => {
-  let sql = `
-          SELECT 
-              e.employee_id, e.first_name, e.last_name, e.email, e.phone_number, e.hire_date, e.salary, e.commission_pct,
-              j.job_title, j.min_salary, j.max_salary,
-              d.department_name,
-              l.street_address, l.postal_code, l.city, l.state_province,
-              c.country_name,
-              r.region_name
-          FROM 
-              hr_employees e
-              JOIN hr_jobs j ON e.job_id = j.job_id
-              JOIN hr_departments d ON e.department_id = d.department_id
-              JOIN hr_locations l ON d.location_id = l.location_id
-              JOIN hr_countries c ON l.country_id = c.country_id
-              JOIN hr_regions r ON c.region_id = r.region_id
-        `;
-  const connection = await oracledb.getConnection();
-  const result = await connection
-    .execute(sql)
-    .then((result) => {
-      //res.render("employee-all", { employee: result.rows });
-      res.json({ employees: result.row });
-    })
-    .catch((err) => {
-      console.error(err.message);
-    });
-});
-
-app.put("/update-employee", async (req, res) => {
-  const { EMPLOYEE_ID, SALARY, EMAIL, PHONE_NUMBER } = req.body;
-
-  try {
-    const sql6 = `
-              UPDATE hr_employees SET 
-              EMAIL = :EMAIL,
-              PHONE_NUMBER = :PHONE_NUMBER,
-              SALARY = :SALARY
-              WHERE EMPLOYEE_ID = :EMPLOYEE_ID
+  
+  app.get("/employeeAllInfo", async (req, res) => {
+    let sql = `
+            SELECT
+                e.employee_id, e.first_name, e.last_name, e.email, e.phone_number, e.hire_date, e.salary, e.commission_pct,
+                j.job_title, j.min_salary, j.max_salary,
+                d.department_name,
+                l.street_address, l.postal_code, l.city, l.state_province,
+                c.country_name,
+                r.region_name
+            FROM
+                hr_employees e
+                JOIN hr_jobs j ON e.job_id = j.job_id
+                JOIN hr_departments d ON e.department_id = d.department_id
+                JOIN hr_locations l ON d.location_id = l.location_id
+                JOIN hr_countries c ON l.country_id = c.country_id
+                JOIN hr_regions r ON c.region_id = r.region_id
           `;
-
     const connection = await oracledb.getConnection();
-    const result = await connection.execute(
-      sql6,
-      {
-        EMAIL,
-        PHONE_NUMBER,
-        SALARY,
-        EMPLOYEE_ID,
-      },
-      { autoCommit: true }
-    );
+    const result = await connection
+      .execute(sql)
+      .then((result) => {
+        //res.render("employee-all", { employee: result.rows });
+        res.json({ employees: result.rows });
+      })
+      .catch((err) => {
+        console.error(err.message);
+      });
+      connection.close();
+  });
 
-    res.status(200).json({ message: "Employee updated successfully." });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to update employee." });
-  }
-});
-
-app.put("/update-job", async (req, res) => {
-  const { JOB_ID, JOB_TITLE, MIN_SALARY, MAX_SALARY } = req.body;
-
-  try {
-    const sql7 = `
-              UPDATE hr_jobs SET 
-              JOB_TITLE = :JOB_TITLE,
-              MIN_SALARY = :MIN_SALARY,
-              MAX_SALARY = :MAX_SALARY
-              WHERE JOB_ID = :JOB_ID
-          `;
-
-    const connection = await oracledb.getConnection();
-    const result = await connection.execute(
-      sql7,
-      {
-        JOB_TITLE,
-        MIN_SALARY,
-        MAX_SALARY,
-        JOB_ID,
-      },
-      { autoCommit: true }
-    );
-
-    res.status(200).json({ message: "Job updated successfully." });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to Job employee." });
-  }
-});
+  app.put("/update-employee", async (req, res) => {
+    const { EMPLOYEE_ID, SALARY, EMAIL, PHONE_NUMBER } = req.body;
+    try {
+      const sql6 = `
+                UPDATE hr_employees SET
+                EMAIL = :EMAIL,
+                PHONE_NUMBER = :PHONE_NUMBER,
+                SALARY = :SALARY
+                WHERE EMPLOYEE_ID = :EMPLOYEE_ID
+            `;
+      const connection = await oracledb.getConnection();
+      const result = await connection.execute(
+        sql6,
+        {
+          EMAIL,
+          PHONE_NUMBER,
+          SALARY,
+          EMPLOYEE_ID,
+        },
+        { autoCommit: true }
+      );
+      connection.close();
+      res.status(200).json({ message: "Employee updated successfully." });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to update employee." });
+    } finally{
+      // connection.release();
+    }
+    
+  });
+  
+   
+  
+  app.put("/update-job", async (req, res) => {
+  
+    const { JOB_ID, JOB_TITLE, MIN_SALARY, MAX_SALARY } = req.body;
+  
+   
+  
+    try {
+  
+      const sql7 = `
+  
+                UPDATE hr_jobs SET
+  
+                JOB_TITLE = :JOB_TITLE,
+  
+                MIN_SALARY = :MIN_SALARY,
+  
+                MAX_SALARY = :MAX_SALARY
+  
+                WHERE JOB_ID = :JOB_ID
+  
+            `;
+  
+   
+  
+      const connection = await oracledb.getConnection();
+  
+      const result = await connection.execute(
+  
+        sql7,
+  
+        {
+  
+          JOB_TITLE,
+  
+          MIN_SALARY,
+  
+          MAX_SALARY,
+  
+          JOB_ID,
+  
+        },
+  
+        { autoCommit: true }
+  
+      );
+  
+      connection.close();
+  
+      res.status(200).json({ message: "Job updated successfully." });
+  
+    } catch (err) {
+  
+      console.error(err);
+  
+      res.status(500).json({ error: "Failed to Job employee." });
+  
+    }
+  
+  });
 
 app.get("/jobs", async (req, res) => {
   let sql4 = `SELECT * FROM HR_JOBS`;
@@ -240,6 +289,7 @@ app.get("/jobs", async (req, res) => {
     .catch((err) => {
       console.error(err.message);
     });
+    connection.close();
 });
 
 app.post("/new-job", async (req, res) => {
@@ -258,7 +308,7 @@ app.post("/new-job", async (req, res) => {
       },
       { autoCommit: true }
     );
-
+    connection.close();
     res.status(201).json({ message: "Job created successfully." });
   } catch (err) {
     console.error(err);
