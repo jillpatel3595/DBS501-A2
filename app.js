@@ -38,7 +38,8 @@ app.get("/job/title", async (req, res) => {
     const connection = await oracledb.getConnection();
     const result = await connection.execute(`SELECT * FROM hr_jobs`);
 
-    connection.release();
+    // connection.release();
+    connection.close();
 
     if (result.rows.length === 0) {
       res.status(404).json({ error: "No jobs found." });
@@ -56,7 +57,8 @@ app.get("/department_id", async (req, res) => {
     const connection = await oracledb.getConnection();
     const result = await connection.execute(`SELECT * FROM hr_departments`);
 
-    connection.release();
+    // connection.release();
+    connection.close();
 
     if (result.rows.length === 0) {
       res.status(404).json({ error: "No departments found." });
@@ -77,7 +79,8 @@ app.get("/manager", async (req, res) => {
       `SELECT * FROM hr_employees WHERE employee_id IN (SELECT manager_id FROM hr_employees)`
     );
  
-    connection.release();
+    // connection.release();
+    connection.close();
  
     if (result.rows.length === 0) {
       res.status(404).json({ error: "No managers found." });
@@ -121,7 +124,7 @@ app.post("/newEmployee", async (req, res) => {
           autoCommit: true,
         }
       );
-  
+      connection.close();
       res.status(200).json({ message: "Employee hired successfully." });
     } catch (err) {
       console.error("Error inserting employee:", err);
@@ -142,11 +145,12 @@ app.post("/newEmployee", async (req, res) => {
       }
       res.status(500).json({ error: "Failed to hire employee." });
     } finally {
-      if (connection) {
-        connection.release();
-      }
+      // if (connection) {
+      //   connection.release();
+      // }
     }
   });
+  
   app.get("/employeeAllInfo", async (req, res) => {
     let sql = `
             SELECT
@@ -174,6 +178,7 @@ app.post("/newEmployee", async (req, res) => {
       .catch((err) => {
         console.error(err.message);
       });
+      connection.close();
   });
 
   app.put("/update-employee", async (req, res) => {
@@ -197,13 +202,15 @@ app.post("/newEmployee", async (req, res) => {
         },
         { autoCommit: true }
       );
+      connection.close();
       res.status(200).json({ message: "Employee updated successfully." });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Failed to update employee." });
     } finally{
-      connection.release();
+      // connection.release();
     }
+    
   });
   
    
@@ -254,7 +261,7 @@ app.post("/newEmployee", async (req, res) => {
   
       );
   
-   
+      connection.close();
   
       res.status(200).json({ message: "Job updated successfully." });
   
@@ -282,6 +289,7 @@ app.get("/jobs", async (req, res) => {
     .catch((err) => {
       console.error(err.message);
     });
+    connection.close();
 });
 
 app.post("/new-job", async (req, res) => {
@@ -300,7 +308,7 @@ app.post("/new-job", async (req, res) => {
       },
       { autoCommit: true }
     );
-
+    connection.close();
     res.status(201).json({ message: "Job created successfully." });
   } catch (err) {
     console.error(err);
