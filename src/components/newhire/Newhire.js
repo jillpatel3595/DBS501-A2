@@ -55,9 +55,9 @@ const Newhire = () => {
             console.log(error)
             console.log(error.error)
             console.log("here")
-            setOpen(true)
+            setOpen(true);
             setError(error?.response?.data?.error ? error.response.data.error : error.message)
-            setMessage(error?.response?.data?.error ? error.response.data.error : error.message)
+            setMessage(error?.response?.data?.message ? error.response.data.message : error.message)
         })
     };
 
@@ -211,7 +211,7 @@ const Newhire = () => {
                         required
                     />
                 </Stack>
-                <Dropdown data={jobs || []} label={"Jobs"} fullWidth  selection={job} setSelection={setJob}/>
+                <Dropdown data={jobs || []} label={"Jobs"} fullWidth  selection={job} setSelection={setJob} required/>
                 <Dropdown data={managers || []} label={"Manager"} fullWidth selection={manager} setSelection={setManager}/>
                 <Dropdown data={departments || []} label={"Department"} fullWidth selection={department} setSelection={setDepartment}/>
                 <Stack spacing={2} sx={{marginBottom: 4, justifyContent:"center"}}>

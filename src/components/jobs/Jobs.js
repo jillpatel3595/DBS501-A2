@@ -154,6 +154,7 @@ function Jobs() {
             fullWidth
             required
             sx={{ mb: 4 }}
+            disabled={newJob ? false : true}
           />
           <TextField
               type="text"

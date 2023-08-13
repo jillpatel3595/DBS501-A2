@@ -75,7 +75,7 @@ function Employees() {
       handleCancel();
     }).catch((error) => {
       setError(error.message)
-      setMessage(error?.response?.data?.error ? error.response.data.error : error.message)
+      setMessage(error?.response?.data?.message ? error.response.data.message : error.message)
       setOpen(true);
     })
   };
