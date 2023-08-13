@@ -23,10 +23,6 @@ const Newhire = () => {
     const [error, setError] = useState(null)
     const [open, setOpen] = useState(false);
     const [message, setMessage] = useState("");
-
-    const handleClick = () => {
-        setOpen(true);
-      };
     
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') {

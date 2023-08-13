@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, CircularProgress, Stack, TextField } from "@mui/material";
+import { Alert, Button, CircularProgress, Snackbar, Stack, TextField } from "@mui/material";
 import Dropdown from "../../shared/Dropdown";
 import updateJob from '../../services/updateJob';
 import getAllJobsData from './../../services/getAllJobsData';
@@ -17,7 +17,17 @@ function Jobs() {
   const [jobs, setJobs] = useState(null);
   const [data, setData] = useState([])
   const [error, setError] = useState(null)
-  const [newJob, setNewJob] = useState(false)
+  const [newJob, setNewJob] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+    return;
+    }
+
+    setOpen(false);
+  };
 
   const transformData = (old) => {
     return old?.map(jobs => {
@@ -54,14 +64,19 @@ function Jobs() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError("")
     if (newJob){
       addNewJob(
         {JOB_ID: id, JOB_TITLE: description, MIN_SALARY: minSalary, MAX_SALARY: maxSalary}
       ).then((data)=>{
         getJobsData();
+        setMessage(data.message)
+        setOpen(true);
       }).catch((error)=>{
         getJobsData();
-        
+        setError(error?.response?.data?.error ? error.response.data.error : error.message)
+        setMessage(error?.response?.data?.error ? error.response.data.error : error.message)
+        setOpen(true);
       })
     }
     else{
@@ -69,9 +84,13 @@ function Jobs() {
         {JOB_ID: id, JOB_TITLE: description, MIN_SALARY: minSalary, MAX_SALARY: maxSalary}
       ).then((data)=>{
         getJobsData();
+        setMessage(data.message)
+        setOpen(true);
       }).catch((error)=>{
         getJobsData();
-        
+        setError(error?.response?.data?.error ? error.response.data.error : error.message)
+        setMessage(error?.response?.data?.error ? error.response.data.error : error.message)
+        setOpen(true);
       })
     }
   };
@@ -181,6 +200,11 @@ function Jobs() {
       ) : (<></>)
       }
       </>: !error ? <CircularProgress /> : <Dropdown data={[]} label={"Jobs"} fullWidth selection={job} setSelection={setJob} />}
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+          <Alert severity={error && error !== "" ? "error" : "success"} sx={{ width: '100%' }}>
+              {message}
+          </Alert>
+      </Snackbar>
     </>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, CircularProgress, Stack, TextField } from "@mui/material";
+import { Alert, Button, CircularProgress, Snackbar, Stack, TextField } from "@mui/material";
 import Dropdown from "../../shared/Dropdown";
 import fetchEmployeeData from "../../services/getAllEmployees";
 import updateEmployee from '../../services/updateEmployee';
@@ -15,6 +15,16 @@ function Employees() {
   const [employees, setEmployees] = useState(null);
   const [data, setData] = useState([])
   const [error, setError] = useState(null)
+  const [open, setOpen] = useState(false)
+  const [message, setMessage] = useState("")
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+    return;
+    }
+
+    setOpen(false);
+  };
 
   const transformData = (old) => {
     return old?.map(employee => {
@@ -55,13 +65,18 @@ function Employees() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError("")
     updateEmployee(
       {EMPLOYEE_ID: id, EMAIL: email, PHONE_NUMBER: phone, SALARY: salary}
     ).then((data) => {
       getEmployeeData();
+      setMessage(data.message)
+      setOpen(true);
       handleCancel();
     }).catch((error) => {
       setError(error.message)
+      setMessage(error?.response?.data?.error ? error.response.data.error : error.message)
+      setOpen(true);
     })
   };
 
@@ -160,6 +175,11 @@ function Employees() {
       ) : (<></>)
       }
       </>: !error ? <CircularProgress /> : <Dropdown data={[]} label={"Employee"} fullWidth selection={employee} setSelection={setEmployee} />}
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+          <Alert severity={error && error !== "" ? "error" : "success"} sx={{ width: '100%' }}>
+              {message}
+          </Alert>
+      </Snackbar>
     </>
   );
 }
